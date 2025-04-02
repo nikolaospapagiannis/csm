@@ -1,154 +1,126 @@
-# CSM
+# CSM Voice Chat Assistant
 
-**2025/03/13** - We are releasing the 1B CSM variant. The checkpoint is [hosted on Hugging Face](https://huggingface.co/sesame/csm_1b).
+A web-based voice assistant built with [Controllable Speech Model (CSM)](https://github.com/SesameAILabs/csm) for high-quality, natural-sounding speech and a simple text interface.
 
----
+## Features
 
-CSM (Conversational Speech Model) is a speech generation model from [Sesame](https://www.sesame.com) that generates RVQ audio codes from text and audio inputs. The model architecture employs a [Llama](https://www.llama.com/) backbone and a smaller audio decoder that produces [Mimi](https://huggingface.co/kyutai/mimi) audio codes.
+- 🗣️ High-quality speech synthesis with CSM
+- 🔄 Multiple voice options (8 different voices)
+- 💬 Interactive chat interface
+- 📱 Modern, responsive UI
+- 🎛️ Simple REST API for chat interactions
+- 🔌 Optional Socket.IO for real-time streaming (recommended)
 
-A fine-tuned variant of CSM powers the [interactive voice demo](https://www.sesame.com/voicedemo) shown in our [blog post](https://www.sesame.com/research/crossing_the_uncanny_valley_of_voice).
+## Installation
 
-A hosted [Hugging Face space](https://huggingface.co/spaces/sesame/csm-1b) is also available for testing audio generation.
+### Prerequisites
 
-## Requirements
-
-* A CUDA-compatible GPU
-* The code has been tested on CUDA 12.4 and 12.6, but it may also work on other versions
-* Similarly, Python 3.10 is recommended, but newer versions may be fine
-* For some audio operations, `ffmpeg` may be required
-* Access to the following Hugging Face models:
-  * [Llama-3.2-1B](https://huggingface.co/meta-llama/Llama-3.2-1B)
-  * [CSM-1B](https://huggingface.co/sesame/csm-1b)
+- Python 3.8 or higher
+- PyTorch
+- CUDA-capable GPU (recommended for faster performance)
 
 ### Setup
 
+1. Clone the CSM repository and set up your environment:
+
 ```bash
-git clone git@github.com:SesameAILabs/csm.git
+git clone https://github.com/SesameAILabs/csm.git
 cd csm
-python3.10 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Disable lazy compilation in Mimi
-export NO_TORCH_COMPILE=1
-
-# You will need access to CSM-1B and Llama-3.2-1B
-huggingface-cli login
+python -m venv .venv
+.venv\Scripts\activate  # On Windows
+source .venv/bin/activate  # On Linux/Mac
 ```
 
-### Windows Setup
-
-The `triton` package cannot be installed in Windows. Instead use `pip install triton-windows`.
-
-## Quickstart
-
-This script will generate a conversation between 2 characters, using a prompt for each character.
+2. Install the required dependencies:
 
 ```bash
-python run_csm.py
+pip install -r requirements.txt
+pip install flask python-dotenv flask-socketio==5.3.4
+```
+
+## Running the Application
+
+### Standard Version
+
+Run the application with the standard REST-based interface:
+
+```bash
+start.bat  # On Windows
+./start.sh  # On Linux/Mac
+```
+
+### Socket.IO Version (Recommended)
+
+For a better experience with real-time streaming:
+
+```bash
+start_socketio.bat  # On Windows
+./start_socketio.sh  # On Linux/Mac
+```
+
+Then visit: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+
+## Configuration
+
+The application can be configured using the `.env` file:
+
+```
+# Required environment variable for torch
+NO_TORCH_COMPILE=1
+
+# Application settings
+PORT=5000
+HOST=127.0.0.1
+DEBUG=True
+
+# Voice settings
+SPEAKER_ID=0  # 0-13 for different voices
+MAX_AUDIO_LENGTH=5000  # Maximum audio length in milliseconds
+CHUNK_SIZE=60  # Text chunk size for speech generation
 ```
 
 ## Usage
 
-If you want to write your own applications with CSM, the following examples show basic usage.
+1. Open your browser and navigate to http://127.0.0.1:5000
+2. You'll be greeted with a welcome message
+3. Type a message in the text box and press Send or hit Enter
+4. The assistant will respond with both text and speech
+5. You can change voices using the dropdown menu
+6. Click the "Clear Chat" button to start a new conversation
 
-#### Generate a sentence
+## Troubleshooting
 
-This will use a random speaker identity, as no prompt or context is provided.
+### Audio Not Playing
 
-```python
-from generator import load_csm_1b
-import torchaudio
-import torch
+Modern browsers require user interaction before playing audio. If you don't hear any voice:
+- Click anywhere on the page to enable audio
+- Make sure your browser's audio is not muted
+- Try reducing the `MAX_AUDIO_LENGTH` in the `.env` file if you encounter errors
 
-if torch.backends.mps.is_available():
-    device = "mps"
-elif torch.cuda.is_available():
-    device = "cuda"
-else:
-    device = "cpu"
+### Memory Issues
 
-generator = load_csm_1b(device=device)
+If you experience out-of-memory errors:
+- Reduce `MAX_AUDIO_LENGTH` in the `.env` file (default: 5000ms)
+- Use smaller `CHUNK_SIZE` values (default: 60 characters)
+- Close other GPU-intensive applications
 
-audio = generator.generate(
-    text="Hello from Sesame.",
-    speaker=0,
-    context=[],
-    max_audio_length_ms=10_000,
-)
+### Socket.IO Version
 
-torchaudio.save("audio.wav", audio.unsqueeze(0).cpu(), generator.sample_rate)
-```
+If the Socket.IO version isn't working:
+- Make sure you have the correct version of Flask-SocketIO: `pip install flask-socketio==5.3.4`
+- Check that you're using the correct HTML template for Socket.IO
 
-#### Generate with context
+## Implementation Details
 
-CSM sounds best when provided with context. You can prompt or provide context to the model using a `Segment` for each speaker's utterance.
+The application is built with:
 
-NOTE: The following example is instructional and the audio files do not exist. It is intended as an example for using context with CSM.
+- **Flask**: Web framework
+- **CSM**: Controllable Speech Model for high-quality voice synthesis
+- **Socket.IO** (optional): For real-time streaming communication
+- **HTML/CSS/JavaScript**: Frontend UI with modern design
 
-```python
-from generator import Segment
+The system processes text in small chunks to provide a more responsive experience and handles errors gracefully to prevent crashes during speech generation.
 
-speakers = [0, 1, 0, 0]
-transcripts = [
-    "Hey how are you doing.",
-    "Pretty good, pretty good.",
-    "I'm great.",
-    "So happy to be speaking to you.",
-]
-audio_paths = [
-    "utterance_0.wav",
-    "utterance_1.wav",
-    "utterance_2.wav",
-    "utterance_3.wav",
-]
+## License
 
-def load_audio(audio_path):
-    audio_tensor, sample_rate = torchaudio.load(audio_path)
-    audio_tensor = torchaudio.functional.resample(
-        audio_tensor.squeeze(0), orig_freq=sample_rate, new_freq=generator.sample_rate
-    )
-    return audio_tensor
-
-segments = [
-    Segment(text=transcript, speaker=speaker, audio=load_audio(audio_path))
-    for transcript, speaker, audio_path in zip(transcripts, speakers, audio_paths)
-]
-audio = generator.generate(
-    text="Me too, this is some cool stuff huh?",
-    speaker=1,
-    context=segments,
-    max_audio_length_ms=10_000,
-)
-
-torchaudio.save("audio.wav", audio.unsqueeze(0).cpu(), generator.sample_rate)
-```
-
-## FAQ
-
-**Does this model come with any voices?**
-
-The model open-sourced here is a base generation model. It is capable of producing a variety of voices, but it has not been fine-tuned on any specific voice.
-
-**Can I converse with the model?**
-
-CSM is trained to be an audio generation model and not a general-purpose multimodal LLM. It cannot generate text. We suggest using a separate LLM for text generation.
-
-**Does it support other languages?**
-
-The model has some capacity for non-English languages due to data contamination in the training data, but it likely won't do well.
-
-## Misuse and abuse ⚠️
-
-This project provides a high-quality speech generation model for research and educational purposes. While we encourage responsible and ethical use, we **explicitly prohibit** the following:
-
-- **Impersonation or Fraud**: Do not use this model to generate speech that mimics real individuals without their explicit consent.
-- **Misinformation or Deception**: Do not use this model to create deceptive or misleading content, such as fake news or fraudulent calls.
-- **Illegal or Harmful Activities**: Do not use this model for any illegal, harmful, or malicious purposes.
-
-By using this model, you agree to comply with all applicable laws and ethical guidelines. We are **not responsible** for any misuse, and we strongly condemn unethical applications of this technology.
-
----
-
-## Authors
-Johan Schalkwyk, Ankit Kumar, Dan Lyth, Sefik Emre Eskimez, Zack Hodari, Cinjon Resnick, Ramon Sanabria, Raven Jiang, and the Sesame team.
+This project follows the CSM license terms (Apache 2.0 License) as per the original CSM repository.

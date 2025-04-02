@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSM-Mimi | Advanced Voice Assistant Platform</title>
+    <meta name="description" content="CSM-Mimi is an advanced AI voice assistant platform with high-quality, natural-sounding speech synthesis and powerful conversation capabilities.">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <!-- Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing-styles.css') }}">
+</head>
+<body class="font-sans text-gray-800 bg-gray-50">
+    <!-- Announcement banner -->
+    <div class="bg-primary-600 text-white text-center py-2 px-4">
+        <p class="text-sm font-medium">🚀 New Release: CSM-Mimi v2.0 with improved voice quality and 4 new voices! <a href="#pricing" class="underline hover:text-primary-200">Learn more</a></p>
+    </div>
+
+    <!-- Navigation -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-3xl mr-2">🤖</span>
+                        <span class="font-bold text-2xl text-primary-700">CSM-Mimi</span>
+                    </div>
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="#features" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-700 hover:border-primary-500">Features</a>
+                        <a href="#demo" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-700 hover:border-primary-500">Demo</a>
+                        <a href="#pricing" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-700 hover:border-primary-500">Pricing</a>
+                        <a href="#faq" class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-700 hover:border-primary-500">FAQ</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="#signup" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Sign Up</a>
+                </div>
+            </div>
+            <!-- Mobile menu button -->
+            <div class="md:hidden flex justify-end">
+                <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 mobile-menu-button" aria-expanded="false">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile menu -->
+        <div class="hidden md:hidden mobile-menu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="#features" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Features</a>
+                <a href="#demo" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Demo</a>
+                <a href="#pricing" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Pricing</a>
+                <a href="#faq" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">FAQ</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto pt-10 pb-16 px-4 sm:pt-12 sm:pb-24 sm:px-6 lg:px-8">
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
+                    <h1>
+                        <span class="block text-sm font-semibold uppercase tracking-wide text-primary-600">Introducing</span>
+                        <span class="mt-1 block text-4xl tracking-tight font-extrabold sm:text-5xl xl:text-6xl">
+                            <span class="block">CSM-Mimi</span>
+                            <span class="block gradient-text bg-gradient-to-r from-primary-600 to-secondary-600">Voice AI Platform</span>
+                        </span>
+                    </h1>
+                    <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                        Experience the next generation of AI voice assistance with CSM-Mimi. Featuring incredibly natural speech, multiple voice options, and powerful conversational capabilities for your applications.
+                    </p>
+                    <div class="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                            <div class="rounded-md shadow">
+                                <a href="#signup" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:py-4 md:text-lg md:px-10">
+                                    Get Started
+                                </a>
+                            </div>
+                            <div class="mt-3 sm:mt-0 sm:ml-3">
+                                <a href="/" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 md:py-4 md:text-lg md:px-10">
+                                    Live Demo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
+                    <div class="relative mx-auto w-full rounded-lg shadow-lg lg:max-w-md animate-float">
+                        <div class="relative block w-full bg-white rounded-lg overflow-hidden">
+                            <img class="w-full" src="https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Voice AI Visualization">
+                            <div class="absolute inset-0 w-full h-full flex items-center justify-center">
+                                <a href="/" class="flex items-center justify-center bg-white rounded-full p-4 shadow-lg hover:bg-gray-100 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-gray-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Features</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Everything you need for voice AI integration
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    CSM-Mimi provides exceptional voice capabilities with easy integration for developers and businesses.
+                </p>
+            </div>
+
+            <div class="mt-16">
+                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+                    <!-- Feature 1 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">High-Quality Speech Synthesis</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                Experience natural-sounding speech with our Controllable Speech Model technology, offering near-human voice quality with proper intonation and emphasis.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Multiple Voice Options</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                Choose from 8+ distinct voices with different accents, tones, and characteristics to match your brand identity or application needs.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Real-Time Streaming</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                Deliver responsive voice interactions with low latency using our Socket.IO integration for real-time streaming of both text and audio.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Easy API Integration</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                Implement voice capabilities into your applications with our straightforward REST API, including comprehensive documentation and SDKs.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Secure & Private</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                End-to-end encryption and configurable data retention policies to keep your conversations private and secure.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="relative">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                        </div>
+                        <div class="ml-16">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Customizable Options</h3>
+                            <p class="mt-2 text-base text-gray-500">
+                                Fine-tune voice parameters like speed, tone, and emotion to deliver the perfect voice experience for your specific use case.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Demo</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    See CSM-Mimi in action
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Experience the natural voice quality and conversational abilities of our platform.
+                </p>
+            </div>
+
+            <div class="mt-10">
+                <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                    <div class="lg:col-span-5">
+                        <h2 class="text-xl font-semibold text-gray-900">Try our interactive demo</h2>
+                        <div class="mt-4 bg-gray-50 p-5 rounded-lg shadow-inner">
+                            <form id="demo-form" class="space-y-4">
+                                <div>
+                                    <label for="demo-message" class="block text-sm font-medium text-gray-700">Type a message</label>
+                                    <div class="mt-1">
+                                        <input type="text" name="demo-message" id="demo-message" class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md p-2" placeholder="Ask me anything...">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="demo-voice" class="block text-sm font-medium text-gray-700">Select a voice</label>
+                                    <select id="demo-voice" name="demo-voice" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                        <option value="0">Voice 1 (Female, Enthusiastic)</option>
+                                        <option value="1">Voice 2 (Male, Professional)</option>
+                                        <option value="2">Voice 3 (Female, Calm)</option>
+                                        <option value="3">Voice 4 (Male, Friendly)</option>
+                                        <option value="4">Voice 5 (Female, Authoritative)</option>
+                                        <option value="5">Voice 6 (Male, Casual)</option>
+                                        <option value="6">Voice 7 (Female, Cheerful)</option>
+                                        <option value="7">Voice 8 (Male, Thoughtful)</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                    Send Message
+                                </button>
+                            </form>
+                            
+                            <div class="mt-6 p-4 bg-white rounded-lg border border-gray-200">
+                                <h3 class="text-sm font-medium text-gray-700">Response:</h3>
+                                <p class="text-gray-600 mt-2" id="demo-response">Navigate to our full demo page to try out the voice capabilities in real-time!</p>
+                                <div class="mt-4 flex items-center" id="audio-player-container" style="display: none;">
+                                    <audio id="audio-player" controls class="w-full"></audio>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-10 lg:mt-0 lg:col-span-7">
+                        <div class="aspect-video rounded-lg shadow-lg overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1587723958656-ee042cc565a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="CSM-Mimi Demo" class="w-full h-full object-cover">
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium text-gray-900">Key features demonstrated:</h3>
+                            <ul class="mt-2 text-gray-600 list-disc list-inside space-y-1">
+                                <li>Natural speech with proper intonation and emphasis</li>
+                                <li>Multiple voices with distinct characteristics</li>
+                                <li>Fast response times with streaming capabilities</li>
+                                <li>Context awareness in conversations</li>
+                                <li>Accurate pronunciation of complex terms</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Pricing</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Plans for teams of all sizes
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Choose the perfect plan for your needs. All plans include API access and our core features.
+                </p>
+                
+                <!-- Pricing toggle -->
+                <div class="relative mt-6 flex justify-center">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm text-gray-500 font-medium">Monthly</span>
+                        <button type="button" id="pricing-toggle" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 bg-gray-200" role="switch" aria-checked="false">
+                            <span aria-hidden="true" class="translate-x-0 pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+                        </button>
+                        <span class="text-sm text-gray-500 font-medium">Annual <span class="text-primary-500">(Save 20%)</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16 space-y-12 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8">
+                <!-- Free Tier -->
+                <div class="relative p-8 bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col pricing-card">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold text-gray-900">Free</h3>
+                        <p class="mt-4 flex items-baseline text-gray-900">
+                            <span class="text-5xl font-extrabold tracking-tight monthly-price">$0</span>
+                            <span class="text-5xl font-extrabold tracking-tight annual-price hidden">$0</span>
+                            <span class="ml-1 text-xl font-semibold">/month</span>
+                        </p>
+                        <p class="mt-6 text-gray-500">Perfect for testing and personal projects.</p>
+
+                        <ul role="list" class="mt-6 space-y-6">
+                            <li class="flex">
+                                <svg class="flex-shrink-0 w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="ml-3 text-gray-500">Up to 100 voice responses per day</span>
+                            </li>
+                            <li class="flex">
+                                <svg class="flex-shrink-0 w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="ml-3 text-gray-500">2 voice options</span>
+                            </li>
+                            <li class="flex">
+                                <svg class="flex-shrink-0 w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span class="ml-3 text-gray-500">REST API access</span>

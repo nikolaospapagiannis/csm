@@ -1,0 +1,70 @@
+/* Custom styles for the landing page */
+
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Pricing toggle */
+#pricing-toggle[aria-checked="true"] span {
+  transform: translateX(1.5rem);
+}
+
+#pricing-toggle[aria-checked="true"] {
+  background-color: #0ea5e9;
+}
+
+/* Pricing cards */
+.pricing-card.popular {
+  border-color: #0ea5e9;
+}
+
+.pricing-card.popular::before {
+  content: 'Most Popular';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #0ea5e9;
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Accordion for FAQ */
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.open {
+  max-height: 1000px;
+}
+
+.accordion-button {
+  transition: transform 0.3s ease;
+}
+
+.accordion-button.open {
+  transform: rotate(45deg);
+}
