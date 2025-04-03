@@ -126,6 +126,7 @@
         #input-container {  
             display: flex;  
             margin-top: 20px;  
+            align-items: center;
         }  
         
         #user-input {  
@@ -153,11 +154,39 @@
             cursor: pointer;  
             font-size: 16px;  
             transition: background-color 0.3s ease;  
+            margin-right: 10px;
         }  
         
         #send-button:hover {  
             background-color: #2980b9;  
         }  
+        
+        #voice-input-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        #voice-input-button:hover {
+            background-color: #2980b9;
+        }
+        
+        #voice-input-button.recording {
+            background-color: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
         
         #status-indicator {  
             text-align: center;  
@@ -273,6 +302,7 @@
     <div id="input-container">  
         <input id="user-input" type="text" placeholder="Type your message..." autocomplete="off">  
         <button id="send-button">Send</button>  
+        <button id="voice-input-button" title="Voice Input">🎤</button>
     </div>  
     <div id="status-indicator"></div>  
     
@@ -288,12 +318,15 @@
         const voiceSelect = document.getElementById('voice-select');
         const notification = document.getElementById('notification');
         const connectionStatus = document.getElementById('connection-status');
+        const voiceInputButton = document.getElementById('voice-input-button');
         
         let isProcessing = false;
         let audioQueue = [];
         let isPlaying = false;
         let currentAssistantDiv = null;
         let socket = null;
+        let mediaRecorder = null;
+        let isRecording = false;
         
         // Connect to Socket.IO
         function connectSocket() {
@@ -352,6 +385,12 @@
                 showNotification(data.text || 'Error occurred', true);
                 isProcessing = false;
             });
+            
+            socket.on('transcription', (data) => {
+                // Display the transcription in the input field
+                userInput.value = data.text;
+                showNotification('Transcription received', false);
+            });
         }
         
         // Set up event listeners
@@ -363,6 +402,7 @@
         });
         
         clearButton.addEventListener('click', clearChat);
+        voiceInputButton.addEventListener('click', toggleVoiceInput);
         
         // Voice selection handler
         voiceSelect.addEventListener('change', function() {
@@ -389,6 +429,81 @@
             });
         });
         
+        // Voice input functionality
+        function toggleVoiceInput() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+        
+        function startRecording() {
+            // Check if the browser supports getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showNotification('Your browser does not support voice input', true);
+                return;
+            }
+            
+            // Request microphone access
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    // Show recording indicator
+                    voiceInputButton.classList.add('recording');
+                    voiceInputButton.textContent = '⏹️';
+                    statusIndicator.textContent = 'Recording... (click again to stop)';
+                    isRecording = true;
+                    
+                    // Create media recorder
+                    const options = { mimeType: 'audio/webm' };
+                    mediaRecorder = new MediaRecorder(stream, options);
+                    
+                    const audioChunks = [];
+                    
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    });
+                    
+                    mediaRecorder.addEventListener('stop', () => {
+                        // Stop all tracks to release the microphone
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // Process the recorded audio
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        processAudio(audioBlob);
+                        
+                        // Reset UI
+                        voiceInputButton.classList.remove('recording');
+                        voiceInputButton.textContent = '🎤';
+                        statusIndicator.textContent = 'Processing audio...';
+                        isRecording = false;
+                    });
+                    
+                    // Start recording
+                    mediaRecorder.start();
+                    
+                    // Automatically stop recording after 10 seconds
+                    setTimeout(() => {
+                        if (mediaRecorder && mediaRecorder.state === 'recording') {
+                            stopRecording();
+                        }
+                    }, 10000);
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                    showNotification('Could not access microphone', true);
+                });
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        }
+        
         function clearChat() {
             fetch('/clear-history', {
                 method: 'POST',
@@ -407,6 +522,21 @@
             .catch(error => {
                 console.error('Error clearing chat:', error);
             });
+        }
+        
+        function processAudio(audioBlob) {
+            // Convert the audio blob to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = function() {
+                const base64Audio = reader.result.split(',')[1];
+                
+                // Send the audio data to the server
+                socket.emit('audio_message', { audio: base64Audio });
+                
+                // Update status
+                statusIndicator.innerHTML = 'Transcribing audio <div class="typing-animation"><span></span><span></span><span></span></div>';
+            };
         }
         
         function showNotification(message, isError) {

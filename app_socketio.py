@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import torchaudio
 import time
@@ -11,7 +12,12 @@ from flask_socketio import SocketIO, emit
 from generator import load_csm_1b
 import base64
 import io
+from openai_integration import get_llm_integration
+from speech_to_text import process_audio_data
 from dotenv import load_dotenv
+from startup_utils import print_startup_message, initialize_app, get_system_info
+from conversation_memory import get_conversation_memory
+from analytics import track_user_message, track_assistant_response, track_session_start, track_session_end
 
 # Load environment variables from .env file if it exists
 load_dotenv()
@@ -24,8 +30,10 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # Initialize global variables
 generator = None
-conversation_history = []
+conversation_memory = get_conversation_memory()
+llm_integration = None
 speaker_id = int(os.getenv('SPEAKER_ID', 0))  # Get from environment or default to 0
+session_start_times = {}  # Track session start times for analytics
 
 # Simple responses for common questions  
 CANNED_RESPONSES = {  
@@ -55,6 +63,10 @@ def load_models():
     print(f"Loading CSM on {device}...")  
     try:  
         generator = load_csm_1b(device=device)  
+        
+        # Initialize LLM integration
+        global llm_integration
+        llm_integration = get_llm_integration()
         print("CSM loaded successfully!")  
         
         # Test voice generation (following official example)  
@@ -73,9 +85,29 @@ def load_models():
         traceback.print_exc()  
         return False  
 
-def generate_response(message):  
-    """Generate a simple response based on the input message"""  
+def generate_response(message, user_id=None):  
+    """Generate a response based on the input message"""  
     message = message.lower()  
+    
+    # Try to use LLM integration if available
+    global llm_integration
+    if llm_integration is not None:
+        # Get conversation history from memory
+        history = conversation_memory.get_history(user_id=user_id, limit=10)
+        
+        # Format history for LLM
+        formatted_history = []
+        for msg in history:
+            formatted_history.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+        
+        # Generate response using LLM
+        llm_response = llm_integration.generate_response(message, formatted_history)
+        if llm_response:
+            print(f"Using LLM response: {llm_response[:50]}...")
+            return llm_response
     
     # Special case for welcome  
     if message == "welcome":  
@@ -105,6 +137,10 @@ def generate_response(message):
 def index():  
     return render_template('index_socketio.html')  
 
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
 @app.route('/favicon.ico')  
 def favicon():  
     # Return an empty response to prevent 404 errors  
@@ -112,11 +148,25 @@ def favicon():
 
 @socketio.on('connect')
 def handle_connect():
-    print("Client connected")
+    user_id = request.sid
+    print(f"Client connected: {user_id}")
     
+    # Track session start time for analytics
+    session_start_times[user_id] = time.time()
+    
+    # Track session start event
+    track_session_start(user_id)
+
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("Client disconnected")
+    user_id = request.sid
+    print(f"Client disconnected: {user_id}")
+    
+    # Calculate session duration for analytics
+    if user_id in session_start_times:
+        session_duration = time.time() - session_start_times[user_id]
+        track_session_end(session_duration, user_id)
+        del session_start_times[user_id]
 
 @socketio.on('user_message')
 def handle_user_message(data):
@@ -127,19 +177,109 @@ def handle_user_message(data):
         emit('error', {'content': 'No message provided'})
         return
     
-    # Update conversation history with user message
-    conversation_history.append({"role": "user", "content": user_input})
+    # Get user ID from session
+    user_id = request.sid
+    
+    # Track user message for analytics
+    track_user_message(user_input, user_id)
+    
+    # Add message to conversation memory
+    conversation_memory.add_message("user", user_input, user_id=user_id)
     
     # Send acknowledgment that we're processing
     emit('message_received', {'status': 'processing'})
     
     try:
-        # Generate a response
-        response = generate_response(user_input)
+        # Record start time for response generation
+        start_time = time.time()
         
-        # Add assistant message to history
-        assistant_msg = {"role": "assistant", "content": response}
-        conversation_history.append(assistant_msg)
+        # Generate a response
+        response = generate_response(user_input, user_id)
+        
+        # Add assistant message to conversation memory
+        conversation_memory.add_message("assistant", response, user_id=user_id)
+        
+        # Calculate processing time
+        processing_time = time.time() - start_time
+        
+        # Track assistant response for analytics
+        track_assistant_response(response, processing_time, user_id)
+        
+        # Send the full text immediately for UI display
+        emit('response_text', {'text': response})
+        
+        # Generate natural speech chunks based on linguistic boundaries
+        chunks = get_natural_speech_chunks(response)
+        
+        # Process each chunk for speech generation
+        for i, chunk in enumerate(chunks):
+            if not chunk.strip():
+                continue
+            
+            # Generate speech for this chunk
+            audio_data = text_to_speech(chunk)
+            if audio_data:  # Only send if audio was generated successfully
+                emit('speech_chunk', {'text': chunk.strip(), 'audio': audio_data})
+            
+            # Small delay for streaming effect
+            time.sleep(0.05)
+        
+        # Mark processing as complete
+        emit('processing_complete')
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        traceback.print_exc()
+        error_message = "I'm having trouble processing that right now."
+        emit('error', {'text': error_message, 'details': str(e)})
+
+@socketio.on('audio_message')
+def handle_audio_message(data):
+    """Handle audio input from the client"""
+    global speaker_id
+    
+    audio_data = data.get('audio', '')
+    if not audio_data:
+        emit('error', {'content': 'No audio data provided'})
+        return
+    
+    # Get user ID from session
+    user_id = request.sid
+    
+    # Process the audio data to get the transcription
+    transcription = process_audio_data(audio_data)
+    
+    if not transcription:
+        emit('error', {'content': 'Failed to transcribe audio'})
+        return
+    
+    # Send the transcription back to the client
+    emit('transcription', {'text': transcription})
+    
+    # Track user message for analytics
+    track_user_message(transcription, user_id)
+    
+    # Add message to conversation memory
+    conversation_memory.add_message("user", transcription, user_id=user_id)
+    
+    # Send acknowledgment that we're processing
+    emit('message_received', {'status': 'processing'})
+    
+    try:
+        # Record start time for response generation
+        start_time = time.time()
+        
+        # Generate a response
+        response = generate_response(transcription, user_id)
+        
+        # Add assistant message to conversation memory
+        conversation_memory.add_message("assistant", response, user_id=user_id)
+        
+        # Calculate processing time
+        processing_time = time.time() - start_time
+        
+        # Track assistant response for analytics
+        track_assistant_response(response, processing_time, user_id)
         
         # Send the full text immediately for UI display
         emit('response_text', {'text': response})
@@ -244,8 +384,12 @@ def text_to_speech(text):
 @app.route('/clear-history', methods=['POST'])  
 def clear_history():  
     """Clear conversation history"""  
-    global conversation_history
-    conversation_history = []
+    # Get user ID from session or use default
+    user_id = request.cookies.get('user_id', 'anonymous')
+    
+    # Clear conversation memory
+    conversation_memory.clear_history(user_id=user_id)
+    
     return jsonify({"status": "success", "message": "Conversation history cleared"})  
 
 @app.route('/change-voice', methods=['POST'])
@@ -256,13 +400,36 @@ def change_voice():
     data = request.json
     new_speaker_id = data.get('speaker_id')
     
-    if new_speaker_id is not None and 0 <= new_speaker_id <= 13:
+    if new_speaker_id is not None and 0 <= new_speaker_id <= 7:
         speaker_id = new_speaker_id
         return jsonify({"status": "success", "message": f"Voice changed to speaker {speaker_id}"})
     else:
-        return jsonify({"status": "error", "message": "Invalid speaker ID. Must be between 0 and 13."})
+        return jsonify({"status": "error", "message": "Invalid speaker ID. Must be between 0 and 7."})
+
+@app.route('/status', methods=['GET'])
+def status():
+    """Get system status information"""
+    system_info = get_system_info()
+    
+    # Add application-specific information
+    system_info["app"] = {
+        "conversation_memory": conversation_memory.get_summary(),
+        "llm_integration": llm_integration.__class__.__name__ if llm_integration else "None",
+        "speaker_id": speaker_id,
+        "uptime": time.time() - system_info.get("timestamp", time.time()),
+        "active_sessions": len(session_start_times)
+    }
+    
+    return jsonify(system_info)
 
 if __name__ == '__main__':
+    # Initialize the application
+    init_result = initialize_app()
+    
+    if init_result["status"] == "error":
+        print(f"Error initializing application: {init_result['message']}")
+        sys.exit(1)
+    
     # Load models before starting the server
     if load_models():
         # Get configuration from environment variables
@@ -270,8 +437,10 @@ if __name__ == '__main__':
         host = os.getenv('HOST', '127.0.0.1')
         port = int(os.getenv('PORT', 5000))
         
-        print(f"Starting server with voice ID {speaker_id}...")
-        print(f"The web interface will be available at: http://{host}:{port}")
+        # Print startup message
+        print_startup_message(host, port)
+        
+        # Run the server
         socketio.run(app, debug=debug_mode, host=host, port=port)
     else:
         print("Failed to load required models. Exiting.")

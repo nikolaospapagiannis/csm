@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  csm-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: csm-voice-assistant
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./.env:/app/.env
+    environment:
+      - NO_TORCH_COMPILE=1
+      - HOST=0.0.0.0
+      - PORT=5000
+      - DEBUG=False
+      - SPEAKER_ID=0
+      - MAX_AUDIO_LENGTH=5000
+      - CHUNK_SIZE=60
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Optional database service for analytics and user authentication
+  db:
+    image: postgres:14-alpine
+    container_name: csm-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=csm
+      - POSTGRES_PASSWORD=csm_password
+      - POSTGRES_DB=csm_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Optional Redis service for caching and session management
+  redis:
+    image: redis:alpine
+    container_name: csm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Optional Nginx service for SSL termination and load balancing
+  nginx:
+    image: nginx:alpine
+    container_name: csm-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/www:/var/www/html
+    depends_on:
+      - csm-app
+
+volumes:
+  postgres_data:
+  redis_data:
